@@ -1,0 +1,17 @@
+{
+  "custom_cnn": {
+    "train": 95.83,
+    "val": 62.5,
+    "holdout": 75.0
+  },
+  "transfer_mobilenet": {
+    "train": 98.96,
+    "val": 96.09,
+    "holdout": 96.09
+  },
+  "dinov2_probe": {
+    "train": 100.0,
+    "val": 99.22,
+    "holdout": 99.22
+  }
+}

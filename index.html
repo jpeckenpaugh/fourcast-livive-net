@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fourcast · Four Visual Paradigms, One Forecast</title>
+  <link rel="stylesheet" href="web/styles.css">
+  <!-- ONNX Runtime Web CDN for browser-native CNN & MobileNet inference -->
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/ort.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <h1 class="brand-title">fourcast.livive.net</h1>
+      <p class="brand-sub">Four Visual Paradigms, One Forecast · Cats vs. Dogs in WebAssembly &amp; WebGPU</p>
+    </div>
+    <nav class="main-nav">
+      <a href="#/" class="nav-link active" data-tab="playground">Playground</a>
+      <a href="#/analytics" class="nav-link" data-tab="analytics">Benchmarking &amp; Metrics</a>
+      <a href="#/background" class="nav-link" data-tab="background">Paradigm Theory</a>
+      <a href="#/code" class="nav-link" data-tab="code">Rust / WASM Code</a>
+    </nav>
+  </header>
+
+  <!-- Global status & caching status -->
+  <aside class="global-bar">
+    <div id="status-pill" class="status-pill loading">Initializing WebAssembly &amp; Cached Models…</div>
+    <div class="controls-group">
+      <span class="meta" id="cache-indicator">⚡ Cached Models Loaded (0ms Startup)</span>
+    </div>
+  </aside>
+
+  <div class="container">
+    <!-- VIEW 1: PLAYGROUND -->
+    <main id="tab-playground" class="tab-view active">
+      <div class="playground-layout">
+        <!-- Sidebar: Image input & gallery -->
+        <aside class="sidebar">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Active Sample</h2>
+              <span class="meta" id="sample-meta">holdout sample</span>
+            </div>
+
+            <div class="image-preview-container" id="drop-zone" title="Drag & drop any image here">
+              <img id="active-image" alt="Selected cat or dog" />
+              <div class="drop-prompt" id="drop-prompt">Drag &amp; drop an image here<br>or click to upload</div>
+              <input type="file" id="file-input" accept="image/*" style="display:none" />
+            </div>
+
+            <div class="row-actions" style="display: flex; gap: 8px;">
+              <button id="upload-btn" class="btn" type="button">Upload File</button>
+              <button id="random-sample-btn" class="btn" type="button">Random Sample</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Holdout Gallery</h2>
+              <span class="meta">128 uncurated test images</span>
+            </div>
+            <div class="gallery-filter">
+              <button class="btn active" data-filter="all">All</button>
+              <button class="btn" data-filter="cat">Cats</button>
+              <button class="btn" data-filter="dog">Dogs</button>
+            </div>
+            <div class="gallery-grid" id="gallery-container">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main content: Pipeline Stepper & 4 Model Forecasts -->
+        <section class="main-content">
+          <!-- Visible Preprocessing Stepper -->
+          <div class="stepper-row">
+            <div class="step-box">
+              <canvas id="step-original" class="step-canvas" width="64" height="64"></canvas>
+              <span class="step-label">1. Square Crop</span>
+            </div>
+            <span class="step-arrow">→</span>
+            <div class="step-box">
+              <canvas id="step-grayscale" class="step-canvas" width="64" height="64"></canvas>
+              <span class="step-label">2. Grayscale</span>
+            </div>
+            <span class="step-arrow">→</span>
+            <div class="step-box">
+              <canvas id="step-64x64" class="step-canvas" width="64" height="64"></canvas>
+              <span class="step-label">3. 64×64 Grid</span>
+            </div>
+            <span class="step-arrow">→</span>
+            <div class="step-box">
+              <canvas id="step-hog-rose" class="step-canvas" width="64" height="64"></canvas>
+              <span class="step-label">4. HOG Gradients</span>
+            </div>
+          </div>
+
+          <!-- The Fourcast Grid -->
+          <div class="fourcast-grid">
+            <!-- 1. HOG + Linear SVM -->
+            <div class="paradigm-card" id="card-hog">
+              <div class="paradigm-badge">Paradigm 1 · Feature-Based ML</div>
+              <h3 class="paradigm-title">HOG + Linear SVM</h3>
+              <p class="paradigm-arch">Sobel Gradients · 8×8 Cells · L2-Hys Normalization · Pegasos SGD</p>
+
+              <div class="pred-bar-container">
+                <div class="pred-fill-cat" id="bar-hog-cat" style="width: 50%"></div>
+                <div class="pred-fill-dog" id="bar-hog-dog" style="width: 50%"></div>
+              </div>
+              <div class="pred-text-row">
+                <span class="pred-text-cat" id="pct-hog-cat">Cat: 50.0%</span>
+                <span class="pred-text-dog" id="pct-hog-dog">Dog: 50.0%</span>
+              </div>
+
+              <div class="paradigm-meta-grid">
+                <div class="meta-item">
+                  <span>Runtime</span>
+                  <span class="meta-value">Pure Rust / Wasm</span>
+                </div>
+                <div class="meta-item">
+                  <span>Latency</span>
+                  <span class="meta-value" id="latency-hog">-- ms</span>
+                </div>
+                <div class="meta-item">
+                  <span>Parameters</span>
+                  <span class="meta-value">1,765 w+b</span>
+                </div>
+              </div>
+
+              <div class="viz-box">
+                <span class="meta">HOG Cell Gradient Orientations</span>
+                <canvas id="hog-canvas" width="128" height="128"></canvas>
+              </div>
+            </div>
+
+            <!-- 2. Custom CNN (from scratch) -->
+            <div class="paradigm-card" id="card-cnn">
+              <div class="paradigm-badge">Paradigm 2 · Deep Learning (Scratch)</div>
+              <h3 class="paradigm-title">Custom 3-Layer CNN</h3>
+              <p class="paradigm-arch">Conv(3,16) → Conv(16,32) → Conv(32,64) → MaxPool → Dense(64)</p>
+
+              <div class="pred-bar-container">
+                <div class="pred-fill-cat" id="bar-cnn-cat" style="width: 50%"></div>
+                <div class="pred-fill-dog" id="bar-cnn-dog" style="width: 50%"></div>
+              </div>
+              <div class="pred-text-row">
+                <span class="pred-text-cat" id="pct-cnn-cat">Cat: 50.0%</span>
+                <span class="pred-text-dog" id="pct-cnn-dog">Dog: 50.0%</span>
+              </div>
+
+              <div class="paradigm-meta-grid">
+                <div class="meta-item">
+                  <span>Runtime</span>
+                  <span class="meta-value">ONNX Web / Wasm</span>
+                </div>
+                <div class="meta-item">
+                  <span>Latency</span>
+                  <span class="meta-value" id="latency-cnn">-- ms</span>
+                </div>
+                <div class="meta-item">
+                  <span>Parameters</span>
+                  <span class="meta-value">288,578 params</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Transfer Learning (MobileNetV2) -->
+            <div class="paradigm-card" id="card-transfer">
+              <div class="paradigm-badge">Paradigm 3 · Transfer Learning</div>
+              <h3 class="paradigm-title">Fine-Tuned MobileNetV2</h3>
+              <p class="paradigm-arch">ImageNet Backbone · Inverted Residuals · Custom Linear Head</p>
+
+              <div class="pred-bar-container">
+                <div class="pred-fill-cat" id="bar-transfer-cat" style="width: 50%"></div>
+                <div class="pred-fill-dog" id="bar-transfer-dog" style="width: 50%"></div>
+              </div>
+              <div class="pred-text-row">
+                <span class="pred-text-cat" id="pct-transfer-cat">Cat: 50.0%</span>
+                <span class="pred-text-dog" id="pct-transfer-dog">Dog: 50.0%</span>
+              </div>
+
+              <div class="paradigm-meta-grid">
+                <div class="meta-item">
+                  <span>Runtime</span>
+                  <span class="meta-value">ONNX Web / Wasm</span>
+                </div>
+                <div class="meta-item">
+                  <span>Latency</span>
+                  <span class="meta-value" id="latency-transfer">-- ms</span>
+                </div>
+                <div class="meta-item">
+                  <span>Parameters</span>
+                  <span class="meta-value">2.23M params</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Vision Foundation Model Probe (DINOv2) -->
+            <div class="paradigm-card" id="card-foundation">
+              <div class="paradigm-badge">Paradigm 4 · Vision Foundation Model</div>
+              <h3 class="paradigm-title">DINOv2 ViT-S/14 Linear Probe</h3>
+              <p class="paradigm-arch">Self-Supervised Vision Transformer · CLS Token (384-D) · Linear Probe</p>
+
+              <div class="pred-bar-container">
+                <div class="pred-fill-cat" id="bar-foundation-cat" style="width: 50%"></div>
+                <div class="pred-fill-dog" id="bar-foundation-dog" style="width: 50%"></div>
+              </div>
+              <div class="pred-text-row">
+                <span class="pred-text-cat" id="pct-foundation-cat">Cat: 50.0%</span>
+                <span class="pred-text-dog" id="pct-foundation-dog">Dog: 50.0%</span>
+              </div>
+
+              <div class="paradigm-meta-grid">
+                <div class="meta-item">
+                  <span>Runtime</span>
+                  <span class="meta-value">Wasm / Cached Probe</span>
+                </div>
+                <div class="meta-item">
+                  <span>Latency</span>
+                  <span class="meta-value" id="latency-foundation">-- ms</span>
+                </div>
+                <div class="meta-item">
+                  <span>Feature Dim</span>
+                  <span class="meta-value">384-D CLS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- VIEW 2: ANALYTICS -->
+    <section id="tab-analytics" class="tab-view">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Benchmarking &amp; Holdout Test Performance</h2>
+          <span class="meta">1,024 balanced Zenodo images (768 Train / 128 Val / 128 Holdout)</span>
+        </div>
+        <p>Across the four paradigms, each architectural leap directly demonstrates why modern computer vision evolved the way it did:</p>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Paradigm</th>
+              <th>Architecture</th>
+              <th>Train Acc</th>
+              <th>Validation Acc</th>
+              <th>Holdout Test Acc</th>
+              <th>Key Insight</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. Feature-Based ML</strong></td>
+              <td>HOG + Linear SVM</td>
+              <td>80.86%</td>
+              <td>64.84%</td>
+              <td><strong>64.84%</strong></td>
+              <td>Captures edge contours; completely invariant to lighting, but lacks non-linear compositionality.</td>
+            </tr>
+            <tr>
+              <td><strong>2. Deep Learning (Scratch)</strong></td>
+              <td>Custom 3-layer CNN (64×64)</td>
+              <td>95.83%</td>
+              <td>62.50%</td>
+              <td><strong>75.00%</strong></td>
+              <td>Learns hierarchical spatial filters directly from pixels, outperforming hand-crafted descriptors.</td>
+            </tr>
+            <tr>
+              <td><strong>3. Transfer Learning</strong></td>
+              <td>MobileNetV2 (ImageNet Pretrained)</td>
+              <td>98.96%</td>
+              <td>96.09%</td>
+              <td><strong>96.09%</strong></td>
+              <td>Pre-trained generic visual representations prevent overfitting even with modest fine-tuning data.</td>
+            </tr>
+            <tr>
+              <td><strong>4. Foundation Model</strong></td>
+              <td>DINOv2 ViT-S/14 Linear Probe</td>
+              <td>100.0%</td>
+              <td>99.22%</td>
+              <td><strong>99.22%</strong></td>
+              <td>Self-supervised patch tokens create near-perfect semantic clusters without training a single conv layer.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VIEW 3: THEORY -->
+    <section id="tab-background" class="tab-view">
+      <div class="panel prose">
+        <h2>The Four Paradigms Explained</h2>
+        <p><strong>fourcast</strong> contrasts four distinct eras of visual intelligence, all arriving at a single classification forecast:</p>
+
+        <h3>1. Classical Computer Vision: Hand-Crafted Features</h3>
+        <p>Before deep learning, features were engineered by domain experts. Dalal &amp; Triggs (2005) introduced <em>Histograms of Oriented Gradients (HOG)</em> for pedestrian detection. Edge gradients are binned into orientation histograms over localized cells. A linear hyperplane (SVM) separates classes.</p>
+
+        <h3>2. Deep Learning from Scratch: Learned Feature Hierarchies</h3>
+        <p>Instead of hardcoding edge detectors, Convolutional Neural Networks (CNNs) learn filter kernels via backpropagation. Early layers capture edges and blobs; deeper layers synthesize animal ears, snouts, and fur textures.</p>
+
+        <h3>3. Transfer Learning: Inductive Bias from Massive Data</h3>
+        <p>Training from scratch on hundreds of images leads to overfitting. Transfer learning leverages models trained on millions of images (ImageNet), adapting only downstream task-specific linear heads.</p>
+
+        <h3>4. Vision Foundation Models: Emergent Semantic Geometry</h3>
+        <p>Modern Vision Transformers (ViT) trained via self-supervised objectives (such as DINOv2) learn representations where semantic concepts are naturally linearly separable in embedding space.</p>
+      </div>
+    </section>
+
+    <!-- VIEW 4: CODE -->
+    <section id="tab-code" class="tab-view">
+      <div class="panel prose">
+        <h2>Core Rust WebAssembly Implementation</h2>
+        <p>All core image preprocessing, HOG orientation voting, and Linear SVM logic are written in pure, auditable Rust with zero external linear algebra dependencies:</p>
+        <pre><code style="font-family: var(--font-mono); font-size: 0.85rem; color: #79c0ff;">
+// Extract HOG feature vector from 64x64 grayscale buffer
+let (descriptor, cell_grid) = extract_hog(&image);
+
+// Linear SVM Decision: w^T x + b
+let decision_value = dot_product(&self.weights, &features) + self.bias;
+let p_cat = 1.0 / (1.0 + (-decision_value).exp());
+        </code></pre>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="web/app.js"></script>
+</body>
+</html>
