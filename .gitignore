@@ -1,0 +1,6 @@
+target/
+pkg/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,31 @@
+Cat/dog teaching dataset
+========================
+
+Source: Jacquemont, Mikaël (2021), “Cats and Dogs sample,” Zenodo, version 1,
+https://doi.org/10.5281/zenodo.5226945. This is a 32,608,921-byte archive with
+1,000 train and 400 test images (balanced 500/500 and 200/200), described by its
+creator as a small sample of the Kaggle Dogs vs. Cats dataset. The archive is
+downloaded on demand; the builder uses only 64 images per class.
+
+The Zenodo record marks the deposited dataset CC BY 4.0. Attribution is
+required; redistributed or adapted images must retain appropriate credit and
+indicate changes. The source archive checksum (MD5) is checked by the builder.
+
+The Zenodo subset does not contain enough usable images for 2,048 samples.
+Inspection found 639 cat and 728 dog files with minimum dimension >=128px
+(591 cats / 683 dogs >=200px). The builder therefore uses the allowed 1,024
+fallback: first 512 qualifying images per class after lexical source-path sort.
+The released sample is light/downscaled, with original sides ranging from 49 to
+500px; selected images are all at least 128px in each dimension.
+
+This replaces the former VOC/bounding-box pipeline. Each image gets a
+deterministic largest centered square crop. Manifest `crop_rect` records
+`[x, y, width, height]` in original source pixels. Crops are JPEGs and remain
+generated artifacts, not committed source data.
+
+Run `./build_dataset.sh` from the repository root. The script creates/uses a
+virtual environment, installs Pillow from `requirements.txt`, downloads the
+32.6 MB archive, and writes 1,024 crops and `data/manifest.json`: 512 cats,
+512 dogs; per class 384 train, 64 val, and 64 holdout. Selection and split are
+deterministic: source paths sort lexically per class, then samples are assigned
+sequentially to the splits.

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "zenodo5226945_cat_0001",
+    "file": "data/crops/zenodo5226945_cat_0001.jpg",
+    "label": "cat",
+    "split": "train",
+    "crop_rect": [0, 78, 343, 343],
+    "source": "zenodo:5226945/cats_dogs_light/test/cat.9818.jpg",
+    "width": 343,
+    "height": 343,
+    "mime": "image/jpeg"
+  },
+  {
+    "id": "zenodo5226945_cat_0385",
+    "file": "data/crops/zenodo5226945_cat_0385.jpg",
+    "label": "cat",
+    "split": "val",
+    "crop_rect": [0, 78, 343, 343],
+    "source": "zenodo:5226945/cats_dogs_light/test/cat.9818.jpg",
+    "width": 343,
+    "height": 343,
+    "mime": "image/jpeg"
+  },
+  {
+    "id": "zenodo5226945_dog_0449",
+    "file": "data/crops/zenodo5226945_dog_0449.jpg",
+    "label": "dog",
+    "split": "holdout",
+    "crop_rect": [62, 0, 375, 375],
+    "source": "zenodo:5226945/cats_dogs_light/test/dog.10001.jpg",
+    "width": 375,
+    "height": 375,
+    "mime": "image/jpeg"
+  }
+]

@@ -1,0 +1,2 @@
+# 4cast data pipeline dependencies (see data/build_dataset.py)
+Pillow>=10.0

@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://4cast.local/schemas/manifest.schema.json",
+  "title": "4cast v0 manifest",
+  "description": "Balanced cat/dog manifest, normally 1024 entries (512/class), with train/val/holdout splits 768/128/128 (384/64/64 per class). Entries are ordered by id; within each class assign sequentially. crop_rect is center-square source provenance.",
+  "type": "array",
+  "minItems": 1024,
+  "maxItems": 2048,
+  "items": {
+    "$ref": "#/$defs/entry"
+  },
+  "allOf": [
+    {
+      "contains": {
+        "type": "object",
+        "required": ["label"],
+        "properties": {
+          "label": {
+            "const": "cat"
+          }
+        }
+      },
+      "minContains": 512,
+      "maxContains": 1024
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": ["label"],
+        "properties": {
+          "label": {
+            "const": "dog"
+          }
+        }
+      },
+      "minContains": 512,
+      "maxContains": 1024
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": ["split"],
+        "properties": {
+          "split": {
+            "const": "train"
+          }
+        }
+      },
+      "minContains": 768,
+      "maxContains": 1536
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": ["split"],
+        "properties": {
+          "split": {
+            "const": "val"
+          }
+        }
+      },
+      "minContains": 128,
+      "maxContains": 256
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": ["split"],
+        "properties": {
+          "split": {"const": "holdout"}
+        }
+      },
+      "minContains": 128,
+      "maxContains": 256
+    }
+  ],
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "file", "label", "split", "crop_rect", "source"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^zenodo5226945_(cat|dog)_[0-9]{4}$",
+          "description": "Stable id derived from label and sorted archive-file position."
+        },
+        "file": {
+          "type": "string",
+          "pattern": "^data/crops/zenodo5226945_(cat|dog)_[0-9]{4}\\.jpg$",
+          "description": "Center-square JPEG, path relative to repository root."
+        },
+        "label": {
+          "enum": ["cat", "dog"]
+        },
+        "split": {
+          "enum": ["train", "val", "holdout"]
+        },
+        "crop_rect": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "prefixItems": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "x offset in original source-image pixels"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "y offset in original source-image pixels"
+            },
+            {
+              "type": "integer",
+              "minimum": 1,
+              "description": "width in original source-image pixels"
+            },
+            {
+              "type": "integer",
+              "minimum": 1,
+              "description": "height in original source-image pixels"
+            }
+          ],
+          "items": false,
+          "description": "Provenance only: [x,y,width,height] of the largest centered square used to crop the original."
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^zenodo:5226945/.+\\.(jpg|jpeg|png)$",
+          "description": "Zenodo record path of the archive image used as source."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 64,
+          "description": "Optional: decoded crop width in pixels."
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 64,
+          "description": "Optional: decoded crop height in pixels."
+        },
+        "mime": {
+          "enum": ["image/jpeg"],
+          "description": "Optional; v0 crops are JPEG."
+        }
+      }
+    }
+  }
+}
