@@ -4,3 +4,6 @@ pkg/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Showcase recorder dependencies
+node_modules/

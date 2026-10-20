@@ -1,0 +1,42 @@
+{
+  "key": "fourcast-livive-net",
+  "source": "http://127.0.0.1:56872/",
+  "captured_at": "2026-10-20T20:56:06.393Z",
+  "git": {
+    "sha": null,
+    "ref": null
+  },
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "duration_ms": 30117,
+  "video": "demo.webm",
+  "thumb": "thumb.webp",
+  "poster": "poster.webp",
+  "video_bytes": 1439816,
+  "encoded_with_ffmpeg": true,
+  "gallery": [
+    {
+      "label": "Four paradigms on one holdout cat",
+      "src": "gallery/01-four-paradigms.png"
+    },
+    {
+      "label": "HOG gradients and the pixel pipeline",
+      "src": "gallery/02-hog-pipeline.png"
+    },
+    {
+      "label": "Filter the holdout gallery",
+      "src": "gallery/03-holdout-gallery.png"
+    },
+    {
+      "label": "Benchmark table and holdout accuracy",
+      "src": "gallery/04-benchmark-metrics.png"
+    },
+    {
+      "label": "The four paradigms explained",
+      "src": "gallery/05-paradigm-theory.png"
+    }
+  ],
+  "console_errors": []
+}
